@@ -31,6 +31,10 @@ function mainMenu(person, people){
   if(!person){
     alert("Could not find that individual.");
     return app(people); // restart
+  } else if (person.length > 1) {
+    alert("Multiple individuals with same name, please be more specific");
+    displayPeople(person);
+    return app(people);
   }
 
   let displayOption = prompt("Found " + person.firstName + " " + person.lastName + " . Do you want to know their 'info', 'family', or 'descendants'? Type the option you want or 'restart' or 'quit'");
@@ -38,7 +42,8 @@ function mainMenu(person, people){
   switch(displayOption){
     case "info":
     // TODO: get person's info
-    break;
+      displayPerson(person[0]);
+      break;
     case "family":
     // TODO: get person's family
     break;
@@ -68,6 +73,7 @@ function searchByName(people){
     }
   })
   // TODO: find the person using the name they entered
+  // TODO: Need to figure out how to handle if multiple matches are found
   return foundPerson;
 }
 
@@ -84,6 +90,11 @@ function displayPerson(person){
   let personInfo = "First Name: " + person.firstName + "\n";
   personInfo += "Last Name: " + person.lastName + "\n";
   // TODO: finish getting the rest of the information to display
+  personInfo += "Height: " + person.height + "\n";
+  personInfo += "Weight: " + person.weight + "\n";
+  personInfo += "Age: " + person.age + "\n";
+  personInfo += "Occupation: " + person.occupation + "\n";
+  personInfo += "EyeColor: " + person.eyeColor + "\n";
   alert(personInfo);
 }
 
