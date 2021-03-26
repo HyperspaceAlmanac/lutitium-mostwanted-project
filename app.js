@@ -12,7 +12,7 @@ function app(people){
       searchResults = searchByName(people);
       break;
     case 'no':
-      // TODO: search by traits
+      searchResults = searchByCriteria(people);
       break;
       default:
     app(people); // restart app
@@ -77,6 +77,26 @@ function searchByName(people){
   return foundPerson;
 }
 
+function searchByCriteria(people){
+  let criteria = promptFor("Here are the criteria: height, weight, dob, eyeColor," 
+  + "occupation, parents, currentSpouse.  Which one would you like to choose?", checkCriteria);
+
+  //Not quite done here.
+  let criteriaValue = promptFor("What ${criteria} value are you looking for?", chars);
+
+  let foundPerson = people.filter(function(person){
+    if(person.criteria === criteriaValue){
+      return true;
+    }
+    else{
+      return false;
+    }
+  })
+  // TODO: find the person using the name they entered
+  // TODO: Need to figure out how to handle if multiple matches are found
+  return foundPerson;
+}
+
 // alerts a list of people
 function displayPeople(people){
   alert(people.map(function(person){
@@ -114,4 +134,20 @@ function yesNo(input){
 // helper function to pass in as default promptFor validation
 function chars(input){
   return true; // default validation only
+}
+
+function checkCriteria(criteria){
+  switch(criteria){
+    case "gender":
+    case "height":
+    case "weight":
+    case "dob":
+    case "eyeColor":
+    case "occupation":
+    case "parents":
+    case "currentSpouse":
+      return true;
+    default:
+      return false;
+  }
 }
