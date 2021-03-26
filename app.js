@@ -77,15 +77,15 @@ function searchByName(people){
   return foundPerson;
 }
 
-function searchByCriteria(people){
+function searchByCriteria(people, count = 0){
+
   let criteria = promptFor("Here are the criteria: height, weight, dob, eyeColor," 
   + "occupation, parents, currentSpouse.  Which one would you like to choose?", checkCriteria);
 
   //Not quite done here.
   let criteriaValue = promptFor("What ${criteria} value are you looking for?", chars);
-
   let foundPerson = people.filter(function(person){
-    if(person.criteria === criteriaValue){
+    if(person[criteria] == criteriaValue){
       return true;
     }
     else{
@@ -94,7 +94,18 @@ function searchByCriteria(people){
   })
   // TODO: find the person using the name they entered
   // TODO: Need to figure out how to handle if multiple matches are found
-  return foundPerson;
+  //user input yes or no to stop
+  displayPeople(foundPerson);
+  //Prompt user;
+  var stop = promptFor("Would you like to continue searching?  yes or no.", chars)
+  if(stop == "yes"){
+  //if(foundPerson.length > 1 && count < 5)
+    foundPerson = searchByCriteria(foundPerson, count + 1);
+  }
+  if(stop == "no"){
+    return foundPerson;
+  }
+  //return foundPerson;
 }
 
 // alerts a list of people
