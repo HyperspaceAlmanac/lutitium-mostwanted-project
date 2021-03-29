@@ -46,7 +46,7 @@ function mainMenu(person, people){
       displayPerson(singlePerson);
       break;
     case "family":
-    // TODO: get person's family
+      familySearch(singlePerson, people);
     break;
     case "descendants":
     // TODO: get person's descendants
@@ -187,3 +187,41 @@ function recursiveDescendantSearch(person, people, result) {
 		recursiveDescendantSearch(filteredList[i], people, result);
 	}
 }
+
+function familySearch(person, people){
+  let result = `Person: ${person.firstName} ${person.lastName} \n`;
+
+    //Get current spouse.
+  let currentSpouseId = person.currentSpouse;
+  if(currentSpouseId !== null){
+    let currentSpouse = people.find(p => p.id === currentSpouseId);
+    result += `Current spouse: ${currentSpouse.firstName} ${currentSpouse.lastName} \n`;
+  }
+
+  //Get parents and siblings.
+  let siblings = [];
+  if(person.parents.length > 0){
+    person.parents.forEach(id =>{
+      
+      //Get parent
+      let currentParent = people.find(p => p.id === id);
+      result += `Parent: ${currentParent.firstName} ${currentParent.lastName} \n`;
+      
+      //Get siblings of parent
+      let currentSiblings = people.filter(p => p.parents.includes(currentParent.id) && p !== person);
+      if(currentSiblings.length > 0){
+        currentSiblings.forEach(sibling =>{
+          if(!siblings.includes(sibling)){
+            siblings.push(sibling);
+          }
+        });
+      }
+  });
+}
+  siblings.forEach(sibling =>{
+    result += `Sibling: ${sibling.firstName} ${sibling.lastName} \n`;
+  });
+  alert(result);
+}
+
+
