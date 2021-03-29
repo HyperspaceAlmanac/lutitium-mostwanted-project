@@ -4,7 +4,7 @@ Build all of your functions for displaying and gathering information below (GUI)
 */
 
 // app is the function called to start the entire application
-let criteriaList = ["gender", "dob", "height", "weight", "eyeColor", "occupation", "age", "spouce", "parent"];
+let criteriaList = ["gender", "dob", "height", "weight", "eyeColor", "occupation", "age", "spouse", "parent"];
 function app(people){
   let searchType = promptFor("Do you know the name of the person you are looking for? Enter 'yes' or 'no'", yesNo).toLowerCase();
   let searchResults;
@@ -13,7 +13,7 @@ function app(people){
       searchResults = searchByName(people);
       break;
     case 'no':
-      searchResults = searchByCriteria(people, criteriaList);
+      searchResults = searchByCriteria(people, people, criteriaList);
       if (searchResults === null) {
         alert("Exiting search application");
         return;
@@ -84,7 +84,7 @@ function searchByName(people){
   return foundPerson;
 }
 
-function searchByCriteria(people, fullCriteria, soFar = []){
+function searchByCriteria(people, fullList, fullCriteria, soFar = []){
   let currentOptions = fullCriteria.filter(c => !soFar.includes(c));
   let displayText = `The search has been narrowed down by ${soFar.length} criterias so far:\n`;
   for (let i = 0; i < soFar.length; i++) {
@@ -109,41 +109,81 @@ function searchByCriteria(people, fullCriteria, soFar = []){
   people.forEach( p =>
     {
       if (!availableValues.includes(p[criteria])) {
-        availableValues.push(p[criteria]);
+        if (criteria === "parent") {
+          // Uniqueness check
+          let parentsList = findParent(p,fullList);
+          parentsList.forEach(parent => {
+            let parentName = `${parent.firstName} ${parent.lastName}`;
+            if (!availableValues.includes(parentName)) {
+              availableValues.push(parentName);
+            }
+          });
+        } else if (criteria === "spouse") {
+          // Also need uniqueness check
+          let spouse = findSpouse(p, fullList);
+          if (spouse !== null) {
+            if (!availableValues.includes(spouse)) {
+              availableValues.push(`${spouse.firstName} ${spouse.lastName}`);
+            }
+          }
+        } else {
+          availableValues.push(p[criteria]);
+        }
       }
     }
   );
 
   let askForCriteriaValueString = `Please enter a value for ${criteria}.\n`;
   askForCriteriaValueString += "The remaining matches have these values:\n";
-  availableValues.forEach(option => askForCriteriaValueString += `${option} `);
-  askForCriteriaValueString += "\n";
+  let joinedValues = availableValues.join(", ");
+  askForCriteriaValueString += joinedValues + "\n";
   
   if (criteria === 'dob') {
 	  askForCriteriaValueString += "\nDate of birth should be in m/dd/yyyy format";
   }
 
-  let criteriaValue = promptFor(askForCriteriaValueString, validateCriteriaValue(criteria));
+  let criteriaValue = (criteria == "parent" || criteria == "spouse") ?
+    promptFor(askForCriteriaValueString, validatePerson(criteria, availableValues))
+    : promptFor(askForCriteriaValueString, validateCriteriaValue(criteria));
   if (criteria == "weight" || criteria == "height") {
     criteriaValue = parseInt(criteriaValue);
 	  if (isNaN(criteriaValue)) {
-		  return searchByCriteria(people, fullCriteria, soFar);
+		  return searchByCriteria(people, fullList, fullCriteria, soFar);
 	  }
   }
   
-  let foundPerson = people.filter(function(person){
-    if(person[criteria] === criteriaValue){
-      return true;
-    }
-    else{
-      return false;
-    }
-  });
+  let foundPerson;
+  if (criteria === "spouse") {
+    foundPerson = people.filter(person => {
+      let spouse = findSpouse(person, fullList);
+      if (spouse === null) {
+        return false;
+      } else {
+        return `${spouse.firstName} ${spouse.lastName}` === criteriaValue;
+      }
+    });
+  } else if (criteria === "parent") {
+    foundPerson = people.filter(person => {
+      let parentsList = findParent(person, fullList);
+      let mappedParents = parentsList.map(p => `${p.firstName} ${p.lastName}`);
+      return mappedParents.includes(criteriaValue);
+    });
+  } else {
+    foundPerson = people.filter(function(person){
+      if(person[criteria] === criteriaValue){
+        return true;
+      }
+      else{
+        return false;
+      }
+    });
+  }
+
   
   // check if list is empty
   if (foundPerson.length == 0) {
 	  // Ask if user wants to go back
-	  return searchByCriteria(people, fullCriteria, soFar);
+	  return searchByCriteria(people, fullList, fullCriteria, soFar);
   }
   soFar.push(criteria);
   // TODO: find the person using the name they entered
@@ -157,7 +197,7 @@ function searchByCriteria(people, fullCriteria, soFar = []){
   if(foundPerson.length > 1 && soFar.length < 5){
   var continueSearching = promptFor(`After ${soFar.length} criterias, there are still ${foundPerson.length} maches, would you like to continue searching?  yes or no.`, chars).toLowerCase();
     if (continueSearching == "yes") {
-      foundPerson = searchByCriteria(foundPerson, fullCriteria, soFar);
+      foundPerson = searchByCriteria(foundPerson, fullList, fullCriteria, soFar);
     }
   }
   return foundPerson;
@@ -180,9 +220,11 @@ function displayPerson(person){
   // TODO: finish getting the rest of the information to display
   personInfo += "Height: " + person.height + "\n";
   personInfo += "Weight: " + person.weight + "\n";
+  personInfo += "Date of Birth: " + person.dob + "\n";
   personInfo += "Age: " + convertToAge(person.dob) + "\n";
   personInfo += "Occupation: " + person.occupation + "\n";
   personInfo += "EyeColor: " + person.eyeColor + "\n";
+  personInfo += "Gender: " + person.gender + "\n";
   alert(personInfo);
 }
 
@@ -295,6 +337,13 @@ function validateCriteriaValue(criteria) {
 	}
 }
 
+function validatePerson(criteria, validNames) {
+  function returnVal(criteria) {
+    return validNames.includes(criteria);
+  }
+	return returnVal;
+}
+
 //Format for string will look like: "dob": "10/7/1953"
 function convertToAge(string){
   //Convert string dob into three separate integers by day, month, year.
@@ -313,6 +362,22 @@ function convertToAge(string){
       age -= 1;
   }
   return age;
+}
+
+function findSpouse(person, people) {
+  if (person.currentSpouse !== null) {
+    return people.find(p => person.currentSpouse === p.id);
+  } else {
+    return null;
+  }
+}
+
+function findParent(person, people) {
+  let parentsList = [];
+  person.parents.forEach(parent => {
+    parentsList.push(people.find(p => p.id === parent));
+  });
+  return parentsList;
 }
 
 
