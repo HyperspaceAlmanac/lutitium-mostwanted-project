@@ -4,7 +4,7 @@ Build all of your functions for displaying and gathering information below (GUI)
 */
 
 // app is the function called to start the entire application
-let criteriaList = ["gender", "dob", "height", "weight", "eyeColor", "occupation", "age", "spouse", "parent"];
+let criteriaList = ["firstName", "lastName", "gender", "dob", "height", "weight", "eyeColor", "occupation", "age", "spouse", "parent"];
 function app(people){
   let searchType = promptFor("Do you know the name of the person you are looking for? Enter 'yes' or 'no'", yesNo).toLowerCase();
   let searchResults;
@@ -34,12 +34,13 @@ function mainMenu(person, people){
   /* Here we pass in the entire person object that we found in our search, as well as the entire original dataset of people. We need people in order to find descendants and other information that the user may want. */
 
   if(person.length === 0){
-    alert("Could not find that individual.");
-    return app(people); // restart
+    alert("Could not find that individual. Exiting search");
+    return;
   } else if (person.length > 1) {
     alert("Multiple individuals that match the search criteria");
     displayPeople(person);
-    return app(people);
+    alert("Exiting search");
+    return;
   }
   let singlePerson = person[0];
 
@@ -88,7 +89,7 @@ function searchByCriteria(people, fullList, fullCriteria, soFar = []){
   let currentOptions = fullCriteria.filter(c => !soFar.includes(c));
   let displayText = `The search has been narrowed down by ${soFar.length} criterias so far:\n`;
   for (let i = 0; i < soFar.length; i++) {
-	  displayText += (i == 0 ? "" : ", ") + soFar[i];
+	  displayText += (i === 0 ? "" : ", ") + soFar[i];
   }
   displayText += "\n";
   displayText += "Enter a number or 'exit' to quit\n";
@@ -126,13 +127,18 @@ function searchByCriteria(people, fullList, fullCriteria, soFar = []){
               availableValues.push(`${spouse.firstName} ${spouse.lastName}`);
             }
           }
-        } else if (criteria == "age"){
+        } else if (criteria === "age"){
           let age = convertToAge(p.dob).toString();
-          if (age != null){
-            availableValues.push(`${age}`);
+          if (age !== null){
+            if (!availableValues.includes(age)) {
+              availableValues.push(age);
+            }
           }
         } else {
-          availableValues.push(p[criteria]);
+          let value = p[criteria];
+          if (!availableValues.includes(value)) {
+            availableValues.push(value);
+          }
         }
       }
     }
@@ -147,9 +153,7 @@ function searchByCriteria(people, fullList, fullCriteria, soFar = []){
 	  askForCriteriaValueString += "\nDate of birth should be in m/dd/yyyy format";
   }
 
-  let criteriaValue = (criteria === "parent" || criteria === "spouse") ?
-    promptFor(askForCriteriaValueString, validatePerson(criteria, availableValues))
-    : promptFor(askForCriteriaValueString, validateCriteriaValue(criteria));
+  let criteriaValue = promptFor(askForCriteriaValueString, validateCriteriaValue(criteria, availableValues));
   if (criteria === "weight" || criteria === "height" || criteria === "age") {
     criteriaValue = parseInt(criteriaValue);
 	  if (isNaN(criteriaValue)) {
@@ -176,9 +180,9 @@ function searchByCriteria(people, fullList, fullCriteria, soFar = []){
   } else if (criteria === "age"){
     foundPerson = people.filter(person => {
       let age = convertToAge(person.dob);
-      return age == criteriaValue;
+      return age === criteriaValue;
     })
-  }else {
+  } else {
     foundPerson = people.filter(function(person){
       if(person[criteria] === criteriaValue){
         return true;
@@ -191,9 +195,14 @@ function searchByCriteria(people, fullList, fullCriteria, soFar = []){
 
   
   // check if list is empty
-  if (foundPerson.length == 0) {
+  if (foundPerson.length === 0) {
 	  // Ask if user wants to go back
-	  return searchByCriteria(people, fullList, fullCriteria, soFar);
+    let retrySearch = promptFor("No matches based on current Criteria. Go back to previous step?", yesNo);
+    if (retrySearch.toLowerCase() === "yes") {
+  	  return searchByCriteria(people, fullList, fullCriteria, soFar);
+    } else {
+      return foundPerson;
+    }
   }
   soFar.push(criteria);
   // TODO: find the person using the name they entered
@@ -206,7 +215,7 @@ function searchByCriteria(people, fullList, fullCriteria, soFar = []){
 
   if(foundPerson.length > 1 && soFar.length < 5){
   var continueSearching = promptFor(`After ${soFar.length} criterias, there are still ${foundPerson.length} maches, would you like to continue searching?  yes or no.`, chars).toLowerCase();
-    if (continueSearching == "yes") {
+    if (continueSearching === "yes") {
       foundPerson = searchByCriteria(foundPerson, fullList, fullCriteria, soFar);
     }
   }
@@ -215,7 +224,7 @@ function searchByCriteria(people, fullList, fullCriteria, soFar = []){
 
 // alerts a list of people
 function displayPeople(people){
-  var firstPart = "There are " + people.length + " match" + (people.length == 1 ? "" : "es") + " so far:\n";
+  var firstPart = "There are " + people.length + " match" + (people.length === 1 ? "" : "es") + " so far:\n";
   firstPart += people.map(function(person){
     return person.firstName + " " + person.lastName;
   }).join("\n");
@@ -248,7 +257,7 @@ function promptFor(question, valid){
 
 // helper function to pass into promptFor to validate yes/no answers
 function yesNo(input){
-  return input.toLowerCase() == "yes" || input.toLowerCase() == "no";
+  return input.toLowerCase() === "yes" || input.toLowerCase() === "no";
 }
 
 // helper function to pass in as default promptFor validation
@@ -348,10 +357,28 @@ function validateCriteriaValue(criteria) {
 }
 
 function validatePerson(criteria, validNames) {
-  function returnVal(criteria) {
-    return validNames.includes(criteria);
+  function returnVal(response) {
+    return validNames.includes(response);
   }
 	return returnVal;
+}
+
+function validateCriteriaValue(criteria, values) {
+  if (criteria === "weight" || criteria === "height" || criteria === "age") {
+    function numberValidate(response) {
+        let num = parseInt(response);
+        if (!isNaN(num)) {
+          return values.includes(num);
+        }
+        return false;
+    }
+    return numberValidate;
+  } else {
+    function stringValidate(response) {
+      return values.includes(response);
+    }
+    return stringValidate;
+  }
 }
 
 //Format for string will look like: "dob": "10/7/1953"
