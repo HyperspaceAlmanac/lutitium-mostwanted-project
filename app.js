@@ -14,6 +14,10 @@ function app(people){
       break;
     case 'no':
       searchResults = searchByCriteria(people, criteriaList);
+      if (searchResults === null) {
+        alert("Exiting search application");
+        return;
+      }
       break;
       default:
     app(people); // restart app
@@ -98,19 +102,36 @@ function searchByCriteria(people, fullCriteria, soFar = []){
 	  return null;
   }
 
-  // Placehodler
-  let criteria = "";
-  let criteriaValue = "";
+  let criteria = currentOptions[criteriaNum - 1];
+  let askForCriteriaValueString = `Please enter a value for ${criteria}:`;
+  if (criteria === 'dob') {
+	  askForCriteriaValueString += "\nDate of birth should be in m/dd/yyyy format";
+  }
 
   //Not quite done here.
+  let criteriaValue = promptFor(askForCriteriaValueString, validateCriteriaValue(criteria));
+  if (criteria == "weight" || criteria == "height") {
+    criteriaValue = parseInt(criteriaValue);
+	if (isNaN(criteriaValue)) {
+		return searchByCriteria(people, fullCriteria, soFar);
+	}
+  }
+  
   let foundPerson = people.filter(function(person){
-    if(person[criteria] == criteriaValue){
+    if(person[criteria] === criteriaValue){
       return true;
     }
     else{
       return false;
     }
-  })
+  });
+  
+  // check if list is empty
+  if (foundPerson.length == 0) {
+	  // Ask if user wants to go back
+	  return searchByCriteria(people, fullCriteria, soFar);
+  }
+  soFar.push(criteria);
   // TODO: find the person using the name they entered
   // TODO: Need to figure out how to handle if multiple matches are found
   //user input yes or no to stop
@@ -120,9 +141,9 @@ function searchByCriteria(people, fullCriteria, soFar = []){
   //Prompt user;
 
   if(foundPerson.length > 1 && soFar.length < 5){
-    var continueSearching = promptFor("There are " + foundPerson.length + " maches, would you like to continue searching?  yes or no.", chars).toLowerCase();
+  var continueSearching = promptFor(`After ${soFar.length} criterias, there are still ${foundPerson.length} maches, would you like to continue searching?  yes or no.`, chars).toLowerCase();
     if (continueSearching == "yes") {
-      foundPerson = searchByCriteria(foundPerson, count + 1);
+      foundPerson = searchByCriteria(foundPerson, fullCriteria, soFar);
     }
   }
   return foundPerson;
@@ -258,6 +279,21 @@ function checkCriteria(optionsList){
 		  }
 	  }
   };
+}
+
+function validateCriteriaValue(criteria) {
+	return inputVal => {
+	  if (criteria === "height" || criteria === "weight") {
+		  let tryParse = parseInt(inputVal);
+		  if (isNaN(tryParse)) {
+			return false;
+		  } else {
+			  return tryParse > -1;
+		  }
+	  } else {
+		  return true;
+	  }
+	}
 }
 
 
