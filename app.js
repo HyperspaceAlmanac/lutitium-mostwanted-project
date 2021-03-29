@@ -180,7 +180,7 @@ function displayPerson(person){
   // TODO: finish getting the rest of the information to display
   personInfo += "Height: " + person.height + "\n";
   personInfo += "Weight: " + person.weight + "\n";
-  personInfo += "Age: " + person.age + "\n";
+  personInfo += "Age: " + convertToAge(person.dob) + "\n";
   personInfo += "Occupation: " + person.occupation + "\n";
   personInfo += "EyeColor: " + person.eyeColor + "\n";
   alert(personInfo);
@@ -293,6 +293,26 @@ function validateCriteriaValue(criteria) {
 		  return true;
 	  }
 	}
+}
+
+//Format for string will look like: "dob": "10/7/1953"
+function convertToAge(string){
+  //Convert string dob into three separate integers by day, month, year.
+  let today = new Date();
+  let year = today.getFullYear();
+  let month = today.getMonth() + 1;
+  let day = today.getDate();
+
+  let dobValues = string.split('/').map(s=> parseInt(s));
+    let age = year - dobValues[2];
+    if(dobValues[0] === month){
+      if(dobValues[1] > day){
+        age -= 1;
+      }
+    }else if(dobValues[0] > month){
+      age -= 1;
+  }
+  return age;
 }
 
 
