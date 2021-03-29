@@ -43,7 +43,7 @@ function mainMenu(person, people){
   }
   let singlePerson = person[0];
 
-  let displayOption = prompt("Found " + person.firstName + " " + person.lastName + " . Do you want to know their 'info', 'family', or 'descendants'? Type the option you want or 'restart' or 'quit'");
+  let displayOption = prompt("Found " + singlePerson.firstName + " " + singlePerson.lastName + " . Do you want to know their 'info', 'family', or 'descendants'? Type the option you want or 'restart' or 'quit'");
 
   switch(displayOption){
     case "info":
@@ -103,18 +103,32 @@ function searchByCriteria(people, fullCriteria, soFar = []){
   }
 
   let criteria = currentOptions[criteriaNum - 1];
-  let askForCriteriaValueString = `Please enter a value for ${criteria}:`;
+
+  // Display available options here
+  let availableValues = [];
+  people.forEach( p =>
+    {
+      if (!availableValues.includes(p[criteria])) {
+        availableValues.push(p[criteria]);
+      }
+    }
+  );
+
+  let askForCriteriaValueString = `Please enter a value for ${criteria}.\n`;
+  askForCriteriaValueString += "The remaining matches have these values:\n";
+  availableValues.forEach(option => askForCriteriaValueString += `${option} `);
+  askForCriteriaValueString += "\n";
+  
   if (criteria === 'dob') {
 	  askForCriteriaValueString += "\nDate of birth should be in m/dd/yyyy format";
   }
 
-  //Not quite done here.
   let criteriaValue = promptFor(askForCriteriaValueString, validateCriteriaValue(criteria));
   if (criteria == "weight" || criteria == "height") {
     criteriaValue = parseInt(criteriaValue);
-	if (isNaN(criteriaValue)) {
-		return searchByCriteria(people, fullCriteria, soFar);
-	}
+	  if (isNaN(criteriaValue)) {
+		  return searchByCriteria(people, fullCriteria, soFar);
+	  }
   }
   
   let foundPerson = people.filter(function(person){
@@ -190,21 +204,6 @@ function chars(input){
   return true; // default validation only
 }
 
-function checkCriteria(criteria){
-  switch(criteria){
-    case "gender":
-    case "height":
-    case "weight":
-    case "dob":
-    case "eyeColor":
-    case "occupation":
-    case "parents":
-    case "currentSpouse":
-      return true;
-    default:
-      return false;
-  }
-}
 function descendantsSearch(person, people) {
 	let result = [];
 	recursiveDescendantSearch(person, people, result);
