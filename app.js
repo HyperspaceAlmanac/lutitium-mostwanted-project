@@ -28,27 +28,29 @@ function mainMenu(person, people){
 
   /* Here we pass in the entire person object that we found in our search, as well as the entire original dataset of people. We need people in order to find descendants and other information that the user may want. */
 
-  if(!person){
+  if(person.length === 0){
     alert("Could not find that individual.");
     return app(people); // restart
   } else if (person.length > 1) {
-    alert("Multiple individuals with same name, please be more specific");
+    alert("Multiple individuals that match the search criteria");
     displayPeople(person);
     return app(people);
   }
+  let singlePerson = person[0];
 
   let displayOption = prompt("Found " + person.firstName + " " + person.lastName + " . Do you want to know their 'info', 'family', or 'descendants'? Type the option you want or 'restart' or 'quit'");
 
   switch(displayOption){
     case "info":
     // TODO: get person's info
-      displayPerson(person[0]);
+      displayPerson(singlePerson);
       break;
     case "family":
     // TODO: get person's family
     break;
     case "descendants":
     // TODO: get person's descendants
+      descendantsSearch(singlePerson, people);
     break;
     case "restart":
     app(people); // restart
@@ -95,24 +97,27 @@ function searchByCriteria(people, count = 0){
   // TODO: find the person using the name they entered
   // TODO: Need to figure out how to handle if multiple matches are found
   //user input yes or no to stop
-  displayPeople(foundPerson);
+  if (foundPerson.length > 1) {
+    displayPeople(foundPerson);
+  }
   //Prompt user;
-  var stop = promptFor("Would you like to continue searching?  yes or no.", chars)
-  if(stop == "yes"){
-  //if(foundPerson.length > 1 && count < 5)
-    foundPerson = searchByCriteria(foundPerson, count + 1);
+
+  if(foundPerson.length > 1 && count < 5){
+    var continueSearching = promptFor("There are " + foundPerson.length + " maches, would you like to continue searching?  yes or no.", chars).toLowerCase();
+    if (continueSearching == "yes") {
+      foundPerson = searchByCriteria(foundPerson, count + 1);
+    }
   }
-  if(stop == "no"){
-    return foundPerson;
-  }
-  //return foundPerson;
+  return foundPerson;
 }
 
 // alerts a list of people
 function displayPeople(people){
-  alert(people.map(function(person){
+  var firstPart = "There are " + people.length + " match" + (people.length == 1 ? "" : "es") + " so far:\n";
+  firstPart += people.map(function(person){
     return person.firstName + " " + person.lastName;
-  }).join("\n"));
+  }).join("\n");
+  alert(firstPart);
 }
 
 function displayPerson(person){
@@ -161,4 +166,24 @@ function checkCriteria(criteria){
     default:
       return false;
   }
+}
+function descendantsSearch(person, people) {
+	let result = [];
+	recursiveDescendantSearch(person, people, result);
+	if (result.length > 0) {
+		let fullResult = person.firstName + " " + person.lastName + "'s descendants:\n";
+		for (let i = 0; i < result.length; i++) {
+			fullResult += result[i].firstName + " " + result[i].lastName + "\n";
+		}
+		alert(fullResult);
+	} else {
+		alert("Unable to find " + person.firstName + " " + person.lastName + "'s descendants in database");
+	}
+}
+function recursiveDescendantSearch(person, people, result) {
+  let filteredList = people.filter(p => p.parents.includes(person.id));
+	for (let i = 0; i < filteredList.length; i++) {
+		result.push(filteredList[i]);
+		recursiveDescendantSearch(filteredList[i], people, result);
+	}
 }
