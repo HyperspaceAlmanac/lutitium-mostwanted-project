@@ -4,6 +4,7 @@ Build all of your functions for displaying and gathering information below (GUI)
 */
 
 // app is the function called to start the entire application
+let criteriaList = ["gender", "dob", "height", "weight", "eyeColor", "occupation", "age", "spouce", "parent"];
 function app(people){
   let searchType = promptFor("Do you know the name of the person you are looking for? Enter 'yes' or 'no'", yesNo).toLowerCase();
   let searchResults;
@@ -12,7 +13,7 @@ function app(people){
       searchResults = searchByName(people);
       break;
     case 'no':
-      searchResults = searchByCriteria(people);
+      searchResults = searchByCriteria(people, criteriaList);
       break;
       default:
     app(people); // restart app
@@ -79,13 +80,29 @@ function searchByName(people){
   return foundPerson;
 }
 
-function searchByCriteria(people, count = 0){
+function searchByCriteria(people, fullCriteria, soFar = []){
+  let currentOptions = fullCriteria.filter(c => !soFar.includes(c));
+  let displayText = `The search has been narrowed down by ${soFar.length} criterias so far:\n`;
+  for (let i = 0; i < soFar.length; i++) {
+	  displayText += (i == 0 ? "" : ", ") + soFar[i];
+  }
+  displayText += "\n";
+  displayText += "Enter a number or 'exit' to quit\n";
 
-  let criteria = promptFor("Here are the criteria: height, weight, dob, eyeColor," 
-  + "occupation, parents, currentSpouse.  Which one would you like to choose?", checkCriteria);
+  for (let i = 0; i < currentOptions.length; i++) {
+	  displayText += `Press ${i + 1} for ${currentOptions[i]}.\n`
+  }
+
+  let criteriaNum = promptFor(displayText, checkCriteria(currentOptions));
+  if (criteriaNum === 'exit') {
+	  return null;
+  }
+
+  // Placehodler
+  let criteria = "";
+  let criteriaValue = "";
 
   //Not quite done here.
-  let criteriaValue = promptFor("What ${criteria} value are you looking for?", chars);
   let foundPerson = people.filter(function(person){
     if(person[criteria] == criteriaValue){
       return true;
@@ -102,7 +119,7 @@ function searchByCriteria(people, count = 0){
   }
   //Prompt user;
 
-  if(foundPerson.length > 1 && count < 5){
+  if(foundPerson.length > 1 && soFar.length < 5){
     var continueSearching = promptFor("There are " + foundPerson.length + " maches, would you like to continue searching?  yes or no.", chars).toLowerCase();
     if (continueSearching == "yes") {
       foundPerson = searchByCriteria(foundPerson, count + 1);
@@ -216,12 +233,32 @@ function familySearch(person, people){
           }
         });
       }
-  });
-}
+    });
+  }
   siblings.forEach(sibling =>{
     result += `Sibling: ${sibling.firstName} ${sibling.lastName} \n`;
   });
   alert(result);
 }
+
+function checkCriteria(optionsList){
+  return inputVal => {
+	  if (inputVal === "exit") {
+		return true;
+	  } else {
+		  let tryParse = parseInt(inputVal);
+		  if (isNaN(tryParse)) {
+			return false;
+		  } else {
+			if (tryParse > 0 && tryParse <= optionsList.length) {
+			  return true;
+			} else {
+			  return false;
+			}
+		  }
+	  }
+  };
+}
+
 
 
