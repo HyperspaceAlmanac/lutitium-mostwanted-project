@@ -126,6 +126,11 @@ function searchByCriteria(people, fullList, fullCriteria, soFar = []){
               availableValues.push(`${spouse.firstName} ${spouse.lastName}`);
             }
           }
+        } else if (criteria == "age"){
+          let age = convertToAge(p.dob).toString();
+          if (age != null){
+            availableValues.push(`${age}`);
+          }
         } else {
           availableValues.push(p[criteria]);
         }
@@ -142,10 +147,10 @@ function searchByCriteria(people, fullList, fullCriteria, soFar = []){
 	  askForCriteriaValueString += "\nDate of birth should be in m/dd/yyyy format";
   }
 
-  let criteriaValue = (criteria == "parent" || criteria == "spouse") ?
+  let criteriaValue = (criteria === "parent" || criteria === "spouse") ?
     promptFor(askForCriteriaValueString, validatePerson(criteria, availableValues))
     : promptFor(askForCriteriaValueString, validateCriteriaValue(criteria));
-  if (criteria == "weight" || criteria == "height") {
+  if (criteria === "weight" || criteria === "height" || criteria === "age") {
     criteriaValue = parseInt(criteriaValue);
 	  if (isNaN(criteriaValue)) {
 		  return searchByCriteria(people, fullList, fullCriteria, soFar);
@@ -168,7 +173,12 @@ function searchByCriteria(people, fullList, fullCriteria, soFar = []){
       let mappedParents = parentsList.map(p => `${p.firstName} ${p.lastName}`);
       return mappedParents.includes(criteriaValue);
     });
-  } else {
+  } else if (criteria === "age"){
+    foundPerson = people.filter(person => {
+      let age = convertToAge(person.dob);
+      return age == criteriaValue;
+    })
+  }else {
     foundPerson = people.filter(function(person){
       if(person[criteria] === criteriaValue){
         return true;
@@ -324,7 +334,7 @@ function checkCriteria(optionsList){
 
 function validateCriteriaValue(criteria) {
 	return inputVal => {
-	  if (criteria === "height" || criteria === "weight") {
+	  if (criteria === "height" || criteria === "weight" || criteria === "age") {
 		  let tryParse = parseInt(inputVal);
 		  if (isNaN(tryParse)) {
 			return false;
