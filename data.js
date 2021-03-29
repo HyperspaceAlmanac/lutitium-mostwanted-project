@@ -285,5 +285,31 @@ const data = [
 		"occupation": "doctor",
 		"parents": [313207561, 313997561],
 		"currentSpouse": null
+	},
+	{
+		"id": 313998092,
+		"firstName": "Ellen",
+		"lastName": "Smith",
+		"gender": "female",
+		"dob": "2/02/1989",
+		"height": 67,
+		"weight": 100,
+		"eyeColor": "blue",
+		"occupation": "accountant",
+		"parents": [],
+		"currentSpouse": null
+	},
+	{
+		"id": 313999015,
+		"firstName": "Jonathan",
+		"lastName": "Madden",
+		"gender": "male",
+		"dob": "2/02/2000",
+		"height": 67,
+		"weight": 100,
+		"eyeColor": "blue",
+		"occupation": "musician",
+		"parents": [313998000, 313998092],
+		"currentSpouse": null
 	}
 ];
